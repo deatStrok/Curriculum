@@ -26,6 +26,8 @@ create table if not exists public.user_settings (
   timezone text not null default 'America/Bahia',
   provider text not null default 'sendgrid',
   email_signature text,
+  subject_template text not null default 'Candidatura para {role}',
+  email_body_template text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

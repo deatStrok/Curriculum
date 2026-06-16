@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional
 
 from database import download_resume, get_admin_client, get_user_settings, list_companies
 from email_service import send_email_sendgrid
-from settings import ALLOWED_SOURCES
+from settings import ALLOWED_SOURCES, PLATFORM_FROM_EMAIL, PLATFORM_FROM_NAME
 from templates import build_email_body, build_subject
 
 
@@ -40,8 +40,13 @@ def send_batch_for_user(user_id: str, limit_override: Optional[int] = None) -> D
     limit = int(limit_override or settings.get("daily_limit") or 30)
     dry_run = bool(settings.get("dry_run", True))
 
-    if not settings.get("sender_email") or not settings.get("sender_name"):
-        raise RuntimeError("Configure nome e e-mail do remetente antes de disparar.")
+    if not settings.get("sender_name"):
+        raise RuntimeError("Configure o nome do candidato antes de disparar.")
+
+    platform_from_email = PLATFORM_FROM_EMAIL or settings.get("sender_email")
+    platform_from_name = PLATFORM_FROM_NAME or "Curriculumy"
+    if not platform_from_email:
+        raise RuntimeError("Configure PLATFORM_FROM_EMAIL nos Secrets do Streamlit ou o e-mail remetente verificado.")
 
     if not settings.get("resume_storage_path"):
         raise RuntimeError("Envie um currículo em PDF antes de disparar.")
@@ -78,12 +83,12 @@ def send_batch_for_user(user_id: str, limit_override: Optional[int] = None) -> D
                 provider_status = "DRY_RUN"
             else:
                 result = send_email_sendgrid(
-                    from_email=settings["sender_email"],
-                    from_name=settings["sender_name"],
+                    from_email=platform_from_email,
+                    from_name=platform_from_name,
                     to_email=company["email"],
                     subject=subject,
                     html_body=body,
-                    reply_to_email=settings.get("reply_to_email") or settings.get("sender_email"),
+                    reply_to_email=settings.get("reply_to_email") or settings.get("sender_email") or platform_from_email,
                     attachment_bytes=resume_bytes,
                     attachment_filename=resume_filename or "curriculo.pdf",
                 )

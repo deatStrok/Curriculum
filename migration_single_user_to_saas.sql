@@ -12,7 +12,7 @@ create extension if not exists pgcrypto;
 
 do $$
 declare
-  owner_user_id uuid := '53a1c1db-6ed2-4a99-972a-72414543d591'; -- TROQUE PELO UUID DO USUARIO DONO DOS DADOS ANTIGOS
+  owner_user_id uuid := '00000000-0000-0000-0000-000000000000'; -- TROQUE PELO UUID DO USUARIO DONO DOS DADOS ANTIGOS
 begin
   if owner_user_id = '00000000-0000-0000-0000-000000000000'::uuid then
     raise exception 'Substitua owner_user_id pelo UUID real de um usuario em auth.users antes de executar.';

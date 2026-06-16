@@ -21,6 +21,8 @@ SUPABASE_ANON_KEY = get_secret("SUPABASE_ANON_KEY", "")
 SUPABASE_SERVICE_ROLE_KEY = get_secret("SUPABASE_SERVICE_ROLE_KEY", "")
 SENDGRID_API_KEY = get_secret("SENDGRID_API_KEY", "")
 APP_TIMEZONE = get_secret("APP_TIMEZONE", "America/Bahia")
+PLATFORM_FROM_EMAIL = get_secret("PLATFORM_FROM_EMAIL", "")
+PLATFORM_FROM_NAME = get_secret("PLATFORM_FROM_NAME", "Curriculumy")
 
 ALLOWED_SOURCES = {
     "vaga_publica",
@@ -42,4 +44,7 @@ DEFAULT_SETTINGS = {
     "timezone": APP_TIMEZONE,
     "provider": "sendgrid",
     "email_signature": "",
+    "subject_template": "Candidatura para {role}",
+    "email_body_template": "",
 }
+

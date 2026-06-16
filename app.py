@@ -17,8 +17,15 @@ from database import (
     upload_resume,
 )
 from send_engine import send_batch_for_user
-from settings import ALLOWED_SOURCES
-from templates import build_email_body, build_subject
+from settings import ALLOWED_SOURCES, PLATFORM_FROM_EMAIL, PLATFORM_FROM_NAME
+from templates import (
+    DEFAULT_EMAIL_TEMPLATE,
+    DEFAULT_SUBJECT_TEMPLATE,
+    TEMPLATE_PRESETS,
+    build_email_body,
+    build_email_text,
+    build_subject,
+)
 
 st.set_page_config(
     page_title="Agente de Candidatura SaaS",
@@ -128,7 +135,7 @@ st.caption("Importe empresas, filtre, aprove, envie lotes e acompanhe logs sem m
 
 page = st.sidebar.radio(
     "Navegação",
-    ["Dashboard", "Empresas", "Importar CSV", "Disparos", "Prévia", "Logs", "Configurações"],
+    ["Dashboard", "Empresas", "Importar CSV", "Mensagem", "Disparos", "Prévia", "Logs", "Configurações"],
 )
 
 if page == "Dashboard":
@@ -280,6 +287,46 @@ elif page == "Empresas":
                 except Exception as exc:
                     st.error(str(exc))
 
+elif page == "Mensagem":
+    st.subheader("Mensagem padrão")
+    st.caption("Defina o assunto e o texto que serão usados nos disparos. Você pode usar variáveis para personalizar por empresa.")
+
+    st.info("Variáveis disponíveis: {company_name}, {candidate_name}, {role}, {company_notes}, {signature}, {reply_to_email}")
+
+    preset_names = list(TEMPLATE_PRESETS.keys())
+    selected_preset = st.selectbox("Modelos prontos", ["Manter meu texto atual", *preset_names])
+
+    current_subject = settings.get("subject_template") or DEFAULT_SUBJECT_TEMPLATE
+    current_body = settings.get("email_body_template") or DEFAULT_EMAIL_TEMPLATE
+
+    if selected_preset != "Manter meu texto atual":
+        current_subject = TEMPLATE_PRESETS[selected_preset]["subject"]
+        current_body = TEMPLATE_PRESETS[selected_preset]["body"]
+
+    with st.form("message_template_form"):
+        subject_template = st.text_input("Assunto do e-mail", value=current_subject)
+        email_body_template = st.text_area("Texto principal do e-mail", value=current_body, height=360)
+        save_template = st.form_submit_button("Salvar mensagem padrão", type="primary")
+        if save_template:
+            update_user_settings(user_id, {
+                "subject_template": subject_template,
+                "email_body_template": email_body_template,
+            })
+            st.success("Mensagem padrão salva.")
+            st.rerun()
+
+    st.divider()
+    st.subheader("Prévia rápida")
+    example_company = {
+        "company_name": "Empresa Exemplo",
+        "email": "rh@empresaexemplo.com.br",
+        "desired_role": settings.get("target_role") or "Desenvolvedor Python",
+        "notes": "",
+    }
+    preview_settings = {**settings, "subject_template": current_subject, "email_body_template": current_body}
+    st.text_input("Assunto renderizado", value=build_subject(example_company, preview_settings), disabled=True)
+    st.text_area("Texto renderizado", value=build_email_text(example_company, preview_settings), height=260, disabled=True)
+
 elif page == "Disparos":
     st.subheader("Disparar pelo próprio sistema")
 
@@ -328,8 +375,11 @@ elif page == "Prévia":
         selected_label = st.selectbox("Empresa", list(options.keys()))
         company = options[selected_label]
         subject = build_subject(company, settings)
+        body_text = build_email_text(company, settings)
         body = build_email_body(company, settings)
         st.text_input("Assunto", value=subject)
+        st.text_area("Texto principal", value=body_text, height=260, disabled=True)
+        st.markdown("### Prévia HTML")
         st.markdown(body, unsafe_allow_html=True)
 
 elif page == "Logs":
@@ -343,21 +393,23 @@ elif page == "Logs":
 elif page == "Configurações":
     st.subheader("Configurações individuais")
 
+    platform_sender = PLATFORM_FROM_EMAIL or settings.get("sender_email") or "não configurado"
+    st.info(f"Remetente técnico usado pelo sistema: {PLATFORM_FROM_NAME} <{platform_sender}>. O e-mail do usuário entra como Reply-To.")
+
     with st.form("settings_form"):
         c1, c2 = st.columns(2)
-        sender_name = c1.text_input("Nome do remetente", value=settings.get("sender_name") or "")
-        sender_email = c2.text_input("E-mail remetente verificado", value=settings.get("sender_email") or "")
+        sender_name = c1.text_input("Nome do candidato", value=settings.get("sender_name") or "")
+        reply_to_email = c2.text_input("E-mail para receber respostas", value=settings.get("reply_to_email") or user_email)
         c3, c4 = st.columns(2)
-        reply_to_email = c3.text_input("Responder para", value=settings.get("reply_to_email") or sender_email)
-        target_role = c4.text_input("Cargo-alvo padrão", value=settings.get("target_role") or "")
-        daily_limit = st.number_input("Limite diário", min_value=1, max_value=10000, value=int(settings.get("daily_limit") or 30))
+        target_role = c3.text_input("Cargo-alvo padrão", value=settings.get("target_role") or "")
+        daily_limit = c4.number_input("Limite diário", min_value=1, max_value=10000, value=int(settings.get("daily_limit") or 30))
         dry_run = st.checkbox("Modo teste: registrar sem enviar e-mail real", value=bool(settings.get("dry_run", True)))
         email_signature = st.text_area("Assinatura", value=settings.get("email_signature") or sender_name)
         save = st.form_submit_button("Salvar configurações", type="primary")
         if save:
             update_user_settings(user_id, {
                 "sender_name": sender_name,
-                "sender_email": sender_email,
+                "sender_email": PLATFORM_FROM_EMAIL or settings.get("sender_email") or "",
                 "reply_to_email": reply_to_email,
                 "target_role": target_role,
                 "daily_limit": int(daily_limit),

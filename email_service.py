@@ -11,6 +11,7 @@ from sendgrid.helpers.mail import (
     FileName,
     FileType,
     Mail,
+    ReplyTo,
 )
 
 from settings import SENDGRID_API_KEY
@@ -37,7 +38,7 @@ def send_email_sendgrid(
     )
 
     if reply_to_email:
-        message.reply_to = reply_to_email
+        message.reply_to = ReplyTo(reply_to_email)
 
     if attachment_bytes and attachment_filename:
         encoded = base64.b64encode(attachment_bytes).decode()

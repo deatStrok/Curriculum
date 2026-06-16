@@ -64,6 +64,8 @@ SUPABASE_ANON_KEY=sua_anon_key_aqui
 SUPABASE_SERVICE_ROLE_KEY=sua_service_role_key_aqui
 SENDGRID_API_KEY=sua_sendgrid_api_key_aqui
 APP_TIMEZONE=America/Bahia
+PLATFORM_FROM_EMAIL=curriculosenv@gmail.com
+PLATFORM_FROM_NAME=Curriculumy
 ```
 
 Em deploy, configure essas mesmas variáveis no painel da plataforma.
@@ -71,6 +73,36 @@ Em deploy, configure essas mesmas variáveis no painel da plataforma.
 Nunca exponha `SUPABASE_SERVICE_ROLE_KEY` no navegador, GitHub ou frontend público. Neste projeto ela fica apenas no servidor Streamlit/worker.
 
 ---
+
+
+## Atualização: mensagem personalizada por usuário
+
+Se você já criou o banco antes desta versão, rode no SQL Editor do Supabase:
+
+```sql
+-- arquivo do projeto
+migration_add_message_templates.sql
+```
+
+Depois disso, cada usuário verá a página **Mensagem**, onde pode escolher um modelo pronto e editar o assunto e o corpo do e-mail.
+
+Variáveis disponíveis nos textos:
+
+- `{company_name}`
+- `{candidate_name}`
+- `{role}`
+- `{company_notes}`
+- `{signature}`
+- `{reply_to_email}`
+
+Para funcionar com um remetente único da plataforma, configure também nos Secrets do Streamlit:
+
+```toml
+PLATFORM_FROM_EMAIL = "curriculosenv@gmail.com"
+PLATFORM_FROM_NAME = "Curriculumy"
+```
+
+O e-mail do usuário fica como **Reply-To**, e não como remetente técnico.
 
 ## 4. Rodar localmente como administrador/desenvolvedor
 
