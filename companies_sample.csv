@@ -1,0 +1,4 @@
+company_name,email,website,city,state,country,sector,desired_role,source,priority,tags,notes
+Empresa Exemplo RH,rh@empresaexemplo.com.br,https://empresaexemplo.com.br,Salvador,BA,Brasil,Tecnologia,Desenvolvedor Python,pagina_carreiras,2,"python;dados","Empresa com área de tecnologia"
+Startup Dados,vagas@startupdados.com.br,https://startupdados.com.br,São Paulo,SP,Brasil,Dados,Engenheiro de Dados,vaga_publica,1,"dados;remoto","Vaga publicada em página oficial"
+Consultoria ABC,talentos@consultoriaabc.com.br,https://consultoriaabc.com.br,Remoto,Remoto,Brasil,Consultoria,Analista de Sistemas,indicacao,3,"sistemas;consultoria","Contato indicado por networking"

@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: agente-candidatura-web
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run app.py --server.port $PORT --server.address 0.0.0.0
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: APP_TIMEZONE
+        value: America/Bahia
+  - type: worker
+    name: agente-candidatura-worker
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python worker.py
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: APP_TIMEZONE
+        value: America/Bahia
